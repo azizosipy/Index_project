@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CV-Tracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<!-- Header moderne -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="/">CV-Tracker</a>
+    </div>
+</nav>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Barre latérale Facettes -->
+        <aside class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">Filtrer par</div>
+                <div class="card-body">
+                    <form method="get" action="/">
+                        <input type="hidden" name="q" value="{{ query }}">
+                        <div class="mb-3">
+                            <label class="form-label">Format de fichier</label>
+                            <select class="form-select" name="format" onchange="this.form.submit()">
+                                <option value="">Tous</option>
+                                {% for i in range(0, facets['format']|length, 2) %}
+                                    <option value="{{ facets['format'][i] }}" {% if selected_format == facets['format'][i] %}selected{% endif %}>
+                                        {{ facets['format'][i] }} ({{ facets['format'][i+1] }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Auteur</label>
+                            <select class="form-select" name="author" onchange="this.form.submit()">
+                                <option value="">Tous</option>
+                                {% for i in range(0, facets['author']|length, 2) %}
+                                    <option value="{{ facets['author'][i] }}" {% if selected_author == facets['author'][i] %}selected{% endif %}>
+                                        {{ facets['author'][i] }} ({{ facets['author'][i+1] }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Fichier précis</label>
+                            <select class="form-select" name="file_id" onchange="this.form.submit()">
+                                <option value="">Tous</option>
+                                {% for file in file_ids %}
+                                    <option value="{{ file.id }}" {% if selected_file == file.id %}selected{% endif %}>{{ file.titre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </aside>
+        <!-- Contenu principal -->
+        <main class="col-md-9">
+            <!-- Formulaire d'upload modernisé -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <form class="row g-2 align-items-center" method="post" action="/upload" enctype="multipart/form-data">
+                        <div class="col-auto flex-grow-1">
+                            <input type="file" class="form-control form-control-lg" name="file" required>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn btn-primary btn-lg px-4" type="submit">
+                                <i class="bi bi-cloud-upload"></i> Indexer le CV
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- Barre de recherche modernisée -->
+            <form class="mb-4" method="get" action="/">
+                <div class="input-group input-group-lg shadow-sm">
+                    <input type="text" class="form-control" name="q" placeholder="Recherche multi-champs..." value="{{ query }}">
+                    <button class="btn btn-outline-primary" type="submit"><i class="bi bi-search"></i> Rechercher</button>
+                </div>
+            </form>
+            <!-- Messages flash -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <!-- Résultats de recherche modernisés -->
+            {% if results %}
+                <div class="row g-3">
+                    {% for doc in results %}
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm h-100 hover-shadow">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h5 class="card-title mb-0">{{ doc.titre or doc.id }}</h5>
+                                        <span class="badge bg-info text-dark fs-6">Score : {{ '%.2f'|format(doc.score) }}</span>
+                                    </div>
+                                    <p class="mb-1"><strong>Auteur :</strong> {{ doc.auteur or 'Inconnu' }} | <strong>Format :</strong> {{ doc.format or 'N/A' }}</p>
+                                    <p class="card-text text-muted">{{ doc.contenu[:300] }}{% if doc.contenu and doc.contenu|length > 300 %}...{% endif %}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% elif query %}
+                <div class="alert alert-warning">Aucun résultat trouvé.</div>
+            {% endif %}
+        </main>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</body>
+</html>
